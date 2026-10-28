@@ -7,8 +7,35 @@ systems to answer: *is this tenant configured correctly, and are their documents
 TriageLens answers that in one API call and records the answer on the incident timeline. It also exposes
 the aggregated numbers a support lead needs (open/urgent/SLA-breached incidents, MTTA, MTTR, trends).
 
-**Stack:** Java 17, Spring Boot 3.4, Spring Data JPA, PostgreSQL 16, Flyway, springdoc-openapi,
-Docker, Kubernetes.
+**Stack:** Java 17, Spring Boot 3.4, Spring Data JPA (Hibernate), PostgreSQL 16, Flyway, OpenAPI/Swagger,
+JUnit 5, Testcontainers, Docker, Kubernetes, GitHub Actions.
+
+## Tech stack
+
+| Layer | Technology | How it is used here |
+|---|---|---|
+| Language | Java 17 | Whole codebase; Maven build targets Java 17 |
+| Framework | Spring Boot 3.4.5 | Embedded Tomcat, auto-configuration, externalised config via `application.yml` and env vars |
+| REST API | Spring Web (MVC), Bean Validation | Versioned `/api/v1` endpoints, DTO request validation, central `@RestControllerAdvice` error handling with one error shape |
+| Persistence | Spring Data JPA, Hibernate, HikariCP | Entities, repositories, custom `@Query` methods (including a native query) for aggregation, `@Transactional` service methods |
+| Database | PostgreSQL 16 | Relational store for tenants, tenant config, documents, incidents and timeline notes |
+| Schema migrations | Flyway | Versioned SQL in [`db/migration`](src/main/resources/db/migration), applied on startup |
+| Security | Servlet filter | API-key authentication (`X-API-Key`) with constant-time comparison; Actuator health left open for probes |
+| API docs | springdoc-openapi (Swagger UI) | Auto-generated OpenAPI spec and interactive docs |
+| Observability | Spring Boot Actuator | Health, liveness and readiness endpoints used by Kubernetes probes |
+| Testing | JUnit 5, AssertJ, Spring Boot Test, Testcontainers | Unit tests for the state machine and finding rules; integration tests against a real PostgreSQL container |
+| Build | Maven | Single module, Spring Boot Maven Plugin produces the executable jar |
+| Containers | Docker (multi-stage), Docker Compose | Maven build stage plus a slim JRE Alpine runtime image running as a non-root user; Compose runs app and database |
+| Orchestration | Kubernetes | Deployment, StatefulSet, Service, HPA, PodDisruptionBudget, Ingress, ConfigMap/Secret, CronJob |
+| CI | GitHub Actions | Runs `mvn verify` (including Testcontainers tests) and builds the Docker image on every push and pull request |
+
+### Engineering concepts demonstrated
+- **Layered architecture:** controller, service, repository and domain layers, with DTOs separating the API from entities.
+- **Domain modelling:** an incident state machine with enforced transitions, and rule-based priority, routing and SLA logic.
+- **Multi-tenancy:** per-tenant configuration and document data, and diagnostics scoped to one tenant.
+- **Data protection:** sensitive tenant config values are masked in diagnostics output.
+- **Operability:** health probes, resource limits, autoscaling and a CronJob that fails when SLAs are breached.
+- **Testing strategy:** fast unit tests plus integration tests against real infrastructure instead of an in-memory substitute.
 
 ## What it does
 
