@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: triagelens-config
+  namespace: triagelens
+data:
+  DB_URL: jdbc:postgresql://postgres:5432/triagelens
+  TRIAGELENS_SEED: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: triagelens-app
+  namespace: triagelens
+type: Opaque
+stringData:
+  DB_USER: triagelens
+  DB_PASSWORD: change-me-in-real-clusters
+  TRIAGELENS_API_KEYS: dev-key-change-me
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: triagelens
+  namespace: triagelens
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: triagelens
+  template:
+    metadata:
+      labels:
+        app: triagelens
+    spec:
+      containers:
+        - name: triagelens
+          image: triagelens:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: triagelens-config
+            - secretRef:
+                name: triagelens-app
+          startupProbe:
+            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: 8080 }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 200m, memory: 384Mi }
+            limits: { memory: 768Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: triagelens
+  namespace: triagelens
+spec:
+  selector:
+    app: triagelens
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: triagelens
+  namespace: triagelens
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: triagelens
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: triagelens
+  namespace: triagelens
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: triagelens
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

@@ -1,0 +1,33 @@
+# Periodically calls the dashboard API so SLA-breach counts are visible in cluster logs/alerting.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sla-watchdog
+  namespace: triagelens
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: check
+              image: curlimages/curl:8.10.1
+              env:
+                - name: API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: triagelens-app
+                      key: TRIAGELENS_API_KEYS
+              command:
+                - sh
+                - -c
+                - |
+                  out=$(curl -fsS -H "X-API-Key: ${API_KEY%%,*}" http://triagelens/api/v1/dashboard/summary?days=1) || exit 1
+                  echo "$out" | tr ',' '\n' | grep -E '"(openIncidents|urgentOpenIncidents|breachedOpenIncidents)"'
+                  echo "$out" | grep -q '"breachedOpenIncidents":0' || { echo "SLA breaches present"; exit 1; }
