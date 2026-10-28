@@ -1,5 +1,7 @@
 # TriageLens
 
+[![CI](https://github.com/nithinmkannal/triagelens/actions/workflows/ci.yml/badge.svg)](https://github.com/nithinmkannal/triagelens/actions/workflows/ci.yml)
+
 Incident triage and tenant diagnostics service for multi-tenant SaaS support teams.
 
 When a customer reports a problem, the support engineer usually has to dig through several backend
