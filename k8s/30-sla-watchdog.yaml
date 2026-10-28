@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: sla-watchdog
-  namespace: triagelens
+  namespace: tenantscope
 spec:
   schedule: "*/15 * * * *"
   concurrencyPolicy: Forbid
@@ -22,12 +22,12 @@ spec:
                 - name: API_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: triagelens-app
-                      key: TRIAGELENS_API_KEYS
+                      name: tenantscope-app
+                      key: TENANTSCOPE_API_KEYS
               command:
                 - sh
                 - -c
                 - |
-                  out=$(curl -fsS -H "X-API-Key: ${API_KEY%%,*}" http://triagelens/api/v1/dashboard/summary?days=1) || exit 1
+                  out=$(curl -fsS -H "X-API-Key: ${API_KEY%%,*}" http://tenantscope/api/v1/dashboard/summary?days=1) || exit 1
                   echo "$out" | tr ',' '\n' | grep -E '"(openIncidents|urgentOpenIncidents|breachedOpenIncidents)"'
                   echo "$out" | grep -q '"breachedOpenIncidents":0' || { echo "SLA breaches present"; exit 1; }

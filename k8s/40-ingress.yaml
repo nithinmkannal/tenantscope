@@ -1,17 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: triagelens
-  namespace: triagelens
+  name: tenantscope
+  namespace: tenantscope
 spec:
   rules:
-    - host: triagelens.local
+    - host: tenantscope.local
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: triagelens
+                name: tenantscope
                 port:
                   number: 80

@@ -1,12 +1,12 @@
-# TriageLens
+# TenantScope
 
-[![CI](https://github.com/nithinmkannal/triagelens/actions/workflows/ci.yml/badge.svg)](https://github.com/nithinmkannal/triagelens/actions/workflows/ci.yml)
+[![CI](https://github.com/nithinmkannal/tenantscope/actions/workflows/ci.yml/badge.svg)](https://github.com/nithinmkannal/tenantscope/actions/workflows/ci.yml)
 
 Incident triage and tenant diagnostics service for multi-tenant SaaS support teams.
 
 When a customer reports a problem, the support engineer usually has to dig through several backend
 systems to answer: *is this tenant configured correctly, and are their documents actually processing?*
-TriageLens answers that in one API call and records the answer on the incident timeline. It also exposes
+TenantScope answers that in one API call and records the answer on the incident timeline. It also exposes
 the aggregated numbers a support lead needs (open/urgent/SLA-breached incidents, MTTA, MTTR, trends).
 
 **Stack:** Java 17, Spring Boot 3.4, Spring Data JPA (Hibernate), PostgreSQL 16, Flyway, OpenAPI/Swagger,
@@ -67,7 +67,7 @@ Seeded tenants: `NORTHWIND` (healthy, PLATINUM), `CONTOSO` (missing config + 35%
 ### Local development
 ```bash
 docker compose up -d db            # PostgreSQL on localhost:5433
-DB_URL=jdbc:postgresql://localhost:5433/triagelens TRIAGELENS_SEED=true mvn spring-boot:run
+DB_URL=jdbc:postgresql://localhost:5433/tenantscope TENANTSCOPE_SEED=true mvn spring-boot:run
 ```
 
 ### Kubernetes
@@ -76,10 +76,10 @@ startup/liveness/readiness probes on Actuator, non-root, resource limits), Servi
 HPA, Ingress, and an `sla-watchdog` CronJob that calls the dashboard API every 15 minutes and fails
 when SLA breaches exist (so the failure surfaces in `kubectl get jobs` or any alerting on job status).
 ```bash
-docker build -t triagelens:1.0.0 .
-# kind/minikube: load the image first, e.g.  kind load docker-image triagelens:1.0.0
+docker build -t tenantscope:1.0.0 .
+# kind/minikube: load the image first, e.g.  kind load docker-image tenantscope:1.0.0
 kubectl apply -f k8s/
-kubectl -n triagelens port-forward svc/triagelens 8085:80
+kubectl -n tenantscope port-forward svc/tenantscope 8085:80
 ```
 The Secrets in `k8s/` hold placeholder values. Replace them before any real use.
 
@@ -111,5 +111,5 @@ config pins `api.version=1.44` so Testcontainers works with Docker Engine 29+.
 | Env var | Default | Meaning |
 |---|---|---|
 | `DB_URL` / `DB_USER` / `DB_PASSWORD` | local PostgreSQL | datasource |
-| `TRIAGELENS_API_KEYS` | `dev-key-change-me` | comma-separated accepted API keys |
-| `TRIAGELENS_SEED` | `false` | load synthetic demo data when the DB is empty |
+| `TENANTSCOPE_API_KEYS` | `dev-key-change-me` | comma-separated accepted API keys |
+| `TENANTSCOPE_SEED` | `false` | load synthetic demo data when the DB is empty |

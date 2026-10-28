@@ -11,10 +11,10 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.triagelens</groupId>
-    <artifactId>triagelens</artifactId>
+    <groupId>com.tenantscope</groupId>
+    <artifactId>tenantscope</artifactId>
     <version>1.0.0</version>
-    <name>TriageLens</name>
+    <name>TenantScope</name>
     <description>Incident triage and tenant diagnostics service</description>
 
     <properties>

@@ -19,4 +19,4 @@ jobs:
       - name: Build and test
         run: mvn -B verify
       - name: Build image
-        run: docker build -t triagelens:ci .
+        run: docker build -t tenantscope:ci .

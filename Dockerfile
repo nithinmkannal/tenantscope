@@ -10,7 +10,7 @@ RUN mvn -q -B -DskipTests package
 FROM eclipse-temurin:17-jre-alpine
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
-COPY --from=build /src/target/triagelens-*.jar app.jar
+COPY --from=build /src/target/tenantscope-*.jar app.jar
 USER app
 EXPOSE 8080
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
